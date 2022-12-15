@@ -1,34 +1,73 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import useSWR from "swr";
+import { Alert, Box, Group, List, ThemeIcon, Title } from "@mantine/core";
+import AddTodo from "./components/AddTodo";
+import { CheckCircleFillIcon } from "@primer/octicons-react";
+import { CheckCircleIcon } from "@primer/octicons-react";
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </div>
-  )
+export interface Todo {
+  id: number;
+  title: string;
+  body: string;
+  done: boolean;
 }
 
-export default App
+export const END_POINT = "http://localhost:8080";
+
+const fetcher = (url: string) =>
+  fetch(`${END_POINT}/${url}`).then((res) => res.json());
+
+function App() {
+  const { data, mutate } = useSWR<Todo[]>("api/todos", fetcher);
+
+  const markTodoAsDone = async (todo: Todo) => {
+    const updated = await fetch(`${END_POINT}/api/todos/${todo.id}/done`, {
+      method: "PATCH",
+    }).then((res) => res.json());
+    mutate(updated);
+  };
+
+  return (
+    <Box
+      sx={(theme) => ({
+        padding: "24",
+        width: "100%",
+        maxWidth: "40rem",
+        margin: "0 auto",
+      })}
+    >
+      <Group mb={20} position="center">
+        <Title order={1}>Go-React Todo Application</Title>
+      </Group>
+      <List spacing={"xs"} size="sm" mb={12} center>
+        {data?.length ? (
+          data.map((todo) => (
+            <List.Item
+              key={`todo_item__${todo.id}`}
+              onClick={() => markTodoAsDone(todo)}
+              icon={
+                todo.done ? (
+                  <ThemeIcon color={"blue"} radius="xl">
+                    <CheckCircleFillIcon size={20} />
+                  </ThemeIcon>
+                ) : (
+                  <ThemeIcon color={"gray"} radius="xl">
+                    <CheckCircleFillIcon size={20} />
+                  </ThemeIcon>
+                )
+              }
+            >
+              {todo.title}
+            </List.Item>
+          ))
+        ) : (
+          <Alert title="Todo List is empty!" color="yellow">
+            todos will be listed here.
+          </Alert>
+        )}
+      </List>
+      <AddTodo mutate={mutate} />
+    </Box>
+  );
+}
+
+export default App;
