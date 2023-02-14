@@ -1,8 +1,12 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/joho/godotenv"
 )
 
 type Todo struct {
@@ -14,10 +18,17 @@ type Todo struct {
 
 func main() {
 	app := fiber.New()
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	app.Use(cors.New(cors.Config{
-		AllowOrigins: "http://localhost:3000",
+		AllowOrigins: os.Getenv("CLIENT_URL"),
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
+
 	todos := []Todo{}
 
 	app.Get("/healthcheck", func(c *fiber.Ctx) error {
