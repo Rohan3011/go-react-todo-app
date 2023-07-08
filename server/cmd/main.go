@@ -31,7 +31,7 @@ func main() {
 
 	todos := []Todo{}
 
-	app.Get("/healthcheck", func(c *fiber.Ctx) error {
+	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
 
