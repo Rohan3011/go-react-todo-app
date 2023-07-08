@@ -4,17 +4,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/Rohan3011/go-todo-app/internal/handlers"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 )
-
-type Todo struct {
-	ID    int    `json:"id"`
-	Title string `json:"title"`
-	Body  string `json:"body"`
-	Done  bool   `json:"done"`
-}
 
 func main() {
 	app := fiber.New()
@@ -29,42 +23,14 @@ func main() {
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	todos := []Todo{}
-
 	app.Get("/health", func(c *fiber.Ctx) error {
 		return c.SendString("OK")
 	})
 
-	app.Get("/api/todos", func(c *fiber.Ctx) error {
-		return c.JSON(todos)
-	})
-
-	app.Post("/api/todos", func(c *fiber.Ctx) error {
-		todo := &Todo{}
-
-		if err := c.BodyParser(todo); err != nil {
-			return err
-		}
-
-		todo.ID = len(todos) + 1
-
-		todos = append(todos, *todo)
-		return c.JSON(todos)
-	})
-
-	app.Patch("/api/todos/:id/done", func(c *fiber.Ctx) error {
-		id, err := c.ParamsInt("id")
-		if err != nil {
-			return c.Status(401).SendString("Invalid id")
-		}
-		for i, t := range todos {
-			if t.ID == id {
-				todos[i].Done = true
-				break
-			}
-		}
-		return c.JSON(todos)
-	})
+	app.Get("/api/todos", handlers.GetTodo)
+	app.Post("/api/todos", handlers.CreateTodo)
+	app.Patch("/api/todos/:id", handlers.UpdateTodo)
+	app.Delete("/api/todos/:id", handlers.DeleteTodo)
 
 	app.Listen(":8080")
 }

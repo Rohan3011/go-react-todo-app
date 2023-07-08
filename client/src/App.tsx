@@ -1,11 +1,20 @@
 import useSWR from "swr";
-import { Alert, Box, Group, List, ThemeIcon, Title } from "@mantine/core";
+import {
+  ActionIcon,
+  Alert,
+  Box,
+  Group,
+  List,
+  ThemeIcon,
+  Title,
+} from "@mantine/core";
 import AddTodo from "./components/AddTodo";
 import { CheckCircleFillIcon } from "@primer/octicons-react";
 import { CheckCircleIcon } from "@primer/octicons-react";
+import { useEffect } from "react";
 
 export interface Todo {
-  id: number;
+  _id: string;
   title: string;
   body: string;
   done: boolean;
@@ -20,11 +29,19 @@ function App() {
   const { data, mutate } = useSWR<Todo[]>("api/todos", fetcher);
 
   const markTodoAsDone = async (todo: Todo) => {
-    const updated = await fetch(`${END_POINT}/api/todos/${todo.id}/done`, {
+    const updated = await fetch(`${END_POINT}/api/todos/${todo._id}`, {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ done: true }),
     }).then((res) => res.json());
     mutate(updated);
   };
+
+  useEffect(() => {
+    console.log(data);
+  });
 
   return (
     <Box
@@ -42,17 +59,17 @@ function App() {
         {data?.length ? (
           data.map((todo) => (
             <List.Item
-              key={`todo_item__${todo.id}`}
+              key={`todo_item__${todo._id}`}
               onClick={() => markTodoAsDone(todo)}
               icon={
                 todo.done ? (
-                  <ThemeIcon color={"blue"} radius="xl">
+                  <ActionIcon color={"blue"} radius="xl">
                     <CheckCircleFillIcon size={20} />
-                  </ThemeIcon>
+                  </ActionIcon>
                 ) : (
-                  <ThemeIcon color={"gray"} radius="xl">
+                  <ActionIcon color={"gray"} radius="xl">
                     <CheckCircleFillIcon size={20} />
-                  </ThemeIcon>
+                  </ActionIcon>
                 )
               }
             >
